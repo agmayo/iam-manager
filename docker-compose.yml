@@ -1,3 +1,4 @@
+# TODO: I would move it to the Docker directory
 version: "3.7"
 services:
   iam-manager:

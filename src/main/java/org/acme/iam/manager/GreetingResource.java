@@ -1,3 +1,6 @@
+// TODO: Leaving it only for reference, should be erased.
+
+
 package org.acme.iam.manager;
 
 import org.jboss.logging.Logger;
