@@ -12,11 +12,14 @@ public class Aggregator {
 
     public boolean checkUserExistence() {
         boolean result = false;
-        // 1. Send Request to keycloak
         LOG.debug("Sending request to keycloak...");
-        // 2. Parse response
+        //      1 Send get_token
+        //      2 Extract token
+        //      3 Send check_existence 
+        //      4 Extract timestamp
+        //      5 If timestamp --> true else false
+        //      6 If cannot connect --> Throw exception
         LOG.debug("Got response from keycloak...");
-        // 3. throw Exception or result = true or result = false
         return result;
     }
 }

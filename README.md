@@ -72,3 +72,4 @@ POST /{realm}/users
 * [User creation](https://stackoverflow.com/questions/52440546/create-user-on-keycloack-from-curl-command)
 * [curl example of user creation](https://issues.redhat.com/browse/KEYCLOAK-5383)
 
+curl -v http://localhost:9090/auth/admin/realms/master/users?username=alice&email=alice@alice.com
