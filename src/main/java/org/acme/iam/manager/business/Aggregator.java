@@ -1,5 +1,6 @@
 package org.acme.iam.manager.business;
 
+import org.acme.iam.manager.events.TokenService;
 import org.jboss.logging.Logger;
 
 /**
@@ -12,9 +13,12 @@ public class Aggregator {
 
     public boolean checkUserExistence() {
         boolean result = false;
+        String token = "No token";
         LOG.debug("Sending request to keycloak...");
         //      1 Send get_token
         //      2 Extract token
+        token = TokenService.getToken();
+        LOG.info("My token is: "+ token);
         //      3 Send check_existence 
         //      4 Extract timestamp
         //      5 If timestamp --> true else false
