@@ -1,6 +1,6 @@
 package org.acme.iam.manager.business;
 
-import org.acme.iam.manager.events.TokenService;
+import org.acme.iam.manager.business.TokenService;
 import org.jboss.logging.Logger;
 
 /**
@@ -17,7 +17,7 @@ public class Aggregator {
         LOG.debug("Sending request to keycloak...");
         //      1 Send get_token
         //      2 Extract token
-        token = TokenService.getToken();
+        token = TokenService.getAdminToken();
         LOG.info("My token is: "+ token);
         //      3 Send check_existence 
         //      4 Extract timestamp
@@ -25,5 +25,11 @@ public class Aggregator {
         //      6 If cannot connect --> Throw exception
         LOG.debug("Got response from keycloak...");
         return result;
+    }
+
+    public String getAccessToken(String user, String password) {
+        String token = null;
+        return token;
+        
     }
 }
