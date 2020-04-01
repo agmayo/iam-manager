@@ -1,60 +1,145 @@
 package org.acme.iam.manager.events;
 
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.acme.iam.manager.business.Aggregator;
 import org.acme.iam.manager.business.TokenServiceInterface;
 import org.acme.iam.manager.dto.TokenData;
+import org.acme.iam.manager.dto.UserToken;
+import org.acme.iam.manager.dto.UserTokenRequest;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-@Path("/login")
+@Path("/token")
 public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
+    
     @Inject
     @RestClient
     TokenServiceInterface tokenServiceInterface;
+
     // Metrics to be sent to Prometheus
-    @GET
-    @Counted(name = "loginCalls", description = "How many times the /login resource has been called")
-    @Timed(name = "loginTime", description = "A measure of how long it takes to retrieve a person.", unit = MetricUnits.MILLISECONDS)
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response login() {
-        //TODO: should receive user data to get the propper token.
-        String user = "rpradom";
-        String password = "rpradom";
+    @Path("/raw")
+    @POST
+    @Counted(name = "rawLoginCalls", description = "How many times the /login/raw resource has been called")
+    @Timed(name = "rawLoginTime", description = "A measure of how long it takes to retrieve a token in json format.", unit = MetricUnits.MILLISECONDS)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response loginRaw(UserTokenRequest userData) {
+        //Valid user: admin
+        // Valid password: Pa55w0rd
         Aggregator aggregator = new Aggregator();
-        TokenData data = tokenServiceInterface.getToken("master",
-                                                "openid-connect",
-                                                "password",
-                                                "admin",
-                                                "Pa55w0rd",
-                                                "admin-cli",
-                                                MediaType.APPLICATION_JSON,
-                                                MediaType.APPLICATION_FORM_URLENCODED);
-        // TODO: We will need some exception management here.
-        //String accessToken = aggregator.getAccessToken(user, password);
-        String accessToken = data.getAccessToken();
-        if(accessToken != null){
-            //TODO: access token not being sent!
-            LOG.info("Returning token " +  "User: " + user + " Token: " + accessToken);
-            return Response.noContent().build();
+        UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+
+        if(userToken.getAccessToken() != null){
+           return buildOkTokenResponse(userToken, userData, "raw");
         }
         else{
-            // TODO: Improve with some extra info in the body. 
-            // More info: https://stackoverflow.com/questions/26845631/is-it-correct-to-return-404-when-a-rest-resource-is-not-found
-            LOG.info("No token could be obtained"+  "User:" + user);
+            return buildKoTokenResponse(userData);
+        }
+    }
+
+    // Metrics to be sent to Prometheus
+    @POST
+    @Path("/cookie")
+    @Counted(name = "cookieLoginCalls", description = "How many times the /login/cookie resource has been called")
+    @Timed(name = "cookieLoginTime", description = "A measure of how long it takes to retrieve a token in cookie format.", unit = MetricUnits.MILLISECONDS)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response loginCookie(UserTokenRequest userData) {
+        //Valid user: admin
+        // Valid password: Pa55w0rd
+        Aggregator aggregator = new Aggregator();
+        UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+
+        if(userToken.getAccessToken() != null){
+           return buildOkTokenResponse(userToken, userData, "cookie");
+        }
+        else{
+            return buildKoTokenResponse(userData);
+        }
+    }
+
+
+    //TODO: This method should be in aggregator but we have injection problems plz help
+    private UserToken buildUserToken(String user, String password) {
+        TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
+        "openid-connect",
+        "password",
+        user,
+        password,
+        "admin-cli",
+        MediaType.APPLICATION_JSON,
+        MediaType.APPLICATION_FORM_URLENCODED);
+        // TODO: We will need some exception management here.
+        UserToken tokenData = new UserToken();
+        tokenData.setAccessToken(iamTokenInfo.getAccessToken());
+        tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());
+        tokenData.setAccessTokenExpiration(iamTokenInfo.getExpiresIn());
+        tokenData.setRefreshTokenExpiration(iamTokenInfo.getRefreshExpiration());
+        return tokenData;
+    }
+    private Response buildOkTokenResponse(UserToken userToken, UserTokenRequest userData, String mode){
+        LOG.info("Returning token " +  
+                 "User: " + userData.getUsername() + 
+                 " Access Token: " + userToken.getAccessToken() +
+                 " Refresh Token: " + userToken.getRefreshToken());
+        
+        if (mode.contentEquals("raw"))
+            return Response.ok(userToken).build();
+        else if(mode.contentEquals("cookie")){
+            String[] tokenParts = userToken.getAccessToken().split("[.]");
+            String tokenHeader = tokenParts[0];
+            String tokenBody = tokenParts[1];
+            String tokenSignature = tokenParts[2];
+            NewCookie payloadCookie = new NewCookie("payload", 
+                                                    tokenHeader + "." + tokenBody,
+                                                    null,
+                                                    null,
+                                                    NewCookie.DEFAULT_VERSION,
+                                                    null,
+                                                    //set expiration for the cookie as token -1 to avoid complicated situations.
+                                                    userToken.getAccessTokenExpiration()-1,
+                                                    null,
+                                                    true,
+                                                    false);
+            LOG.debug("Token payload cookie created: " + payloadCookie.toString());
+            NewCookie signatureCookie = new NewCookie("signature",
+                                                       tokenSignature,
+                                                       null,
+                                                       null,
+                                                       NewCookie.DEFAULT_VERSION,
+                                                       null,
+                                                       //set expiration for the cookie as token -1 to avoid complicated situations.
+                                                       userToken.getAccessTokenExpiration()-1,
+                                                       null,
+                                                       true,
+                                                       true);
+            LOG.debug("Token signature cookie created: " + signatureCookie.toString());
+            return Response.noContent().cookie(payloadCookie, signatureCookie).build();
+
+        }else{
+            LOG.error("Unknown mode for buildOkTokenResponse(): " + mode);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
+    private Response buildKoTokenResponse(UserTokenRequest userData){
+        LOG.info("No token could be obtained"+  "User:" + userData.getUsername());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+    // TODO: What if someone not in the IAM tries to get a token????
+
 }
