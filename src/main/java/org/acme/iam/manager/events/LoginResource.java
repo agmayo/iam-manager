@@ -1,7 +1,6 @@
 package org.acme.iam.manager.events;
 
-import org.jboss.logging.Logger;
-
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -9,16 +8,22 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.acme.iam.manager.business.Aggregator;
+import org.acme.iam.manager.business.TokenServiceInterface;
+import org.acme.iam.manager.dto.TokenData;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 @Path("/login")
 public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
-
+    @Inject
+    @RestClient
+    TokenServiceInterface tokenServiceInterface;
     // Metrics to be sent to Prometheus
     @GET
     @Counted(name = "loginCalls", description = "How many times the /login resource has been called")
@@ -29,11 +34,20 @@ public class LoginResource {
         String user = "rpradom";
         String password = "rpradom";
         Aggregator aggregator = new Aggregator();
+        TokenData data = tokenServiceInterface.getToken("master",
+                                                "openid-connect",
+                                                "password",
+                                                "admin",
+                                                "Pa55w0rd",
+                                                "admin-cli",
+                                                MediaType.APPLICATION_JSON,
+                                                MediaType.APPLICATION_FORM_URLENCODED);
         // TODO: We will need some exception management here.
-        String accessToken = aggregator.getAccessToken(user, password);
+        //String accessToken = aggregator.getAccessToken(user, password);
+        String accessToken = data.getAccessToken();
         if(accessToken != null){
             //TODO: access token not being sent!
-            LOG.info("Retruning token" +  "User:" + user + "Token: " + accessToken);
+            LOG.info("Returning token " +  "User: " + user + " Token: " + accessToken);
             return Response.noContent().build();
         }
         else{

@@ -1,6 +1,9 @@
 package org.acme.iam.manager.business;
 
-import org.acme.iam.manager.business.TokenService;
+import javax.inject.Inject;
+
+import org.acme.iam.manager.dto.TokenData;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 /**
@@ -8,6 +11,9 @@ import org.jboss.logging.Logger;
  */
 public class Aggregator {
 
+    @Inject
+    @RestClient
+    TokenServiceInterface tokenServiceInterface;
 
     private static final Logger LOG = Logger.getLogger(Aggregator.class);
 
@@ -28,7 +34,16 @@ public class Aggregator {
     }
 
     public String getAccessToken(String user, String password) {
+        
         String token = null;
+        //token = TokenService.getUserToken(user, password);
+        /*TokenData data = tokenServiceInterface.getToken("master",
+                                                "openid-connect",
+                                                "password",
+                                                "admin",
+                                                "Pa55w0rd",
+                                                "admin-cli",
+                                                "application/json");*/
         return token;
         
     }

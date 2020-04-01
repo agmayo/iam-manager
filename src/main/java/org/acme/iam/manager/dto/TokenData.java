@@ -11,7 +11,9 @@ public class TokenData {
     @JsonbProperty("expires_in")
     private int expiresIn;
     @JsonbProperty("refresh_token")
-    private String refreshToken;
+	private String refreshToken;
+	@JsonbProperty("refresh_expires_in")
+    private int refreshExpiration;
     // TODO: probably an enum.
     @JsonbProperty("token_type")
     private String tokenType;
@@ -27,7 +29,7 @@ public class TokenData {
     }
 
 	public TokenData(String accessToken, int expiresIn, String refreshToken, String tokenType, int notBeforePolicy,
-			String sessionState, String scope) {
+			String sessionState, String scope, int refreshExpiration) {
 		this.accessToken = accessToken;
 		this.expiresIn = expiresIn;
 		this.refreshToken = refreshToken;
@@ -35,6 +37,7 @@ public class TokenData {
 		this.notBeforePolicy = notBeforePolicy;
 		this.sessionState = sessionState;
 		this.scope = scope;
+		this.refreshExpiration= refreshExpiration;
 	}
 
 	public String getAccessToken() {
@@ -91,6 +94,14 @@ public class TokenData {
 
 	public void setScope(String scope) {
 		this.scope = scope;
+	}
+
+	public int getRefreshExpiration() {
+		return refreshExpiration;
+	}
+
+	public void setRefreshExpiration(int refreshExpiration) {
+		this.refreshExpiration = refreshExpiration;
 	}
 
     

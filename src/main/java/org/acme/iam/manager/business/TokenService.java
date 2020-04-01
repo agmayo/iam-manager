@@ -51,7 +51,7 @@ public class TokenService {
     @POST
     @Path("/realms/{realm}/protocol/{protocol}/token")
     @Produces(MediaType.APPLICATION_JSON)
-    public static String getUserToken(){
+    public static String getUserToken(String username, String password){
         String secret ="secret";
 
         Response response = given().urlEncodingEnabled(
