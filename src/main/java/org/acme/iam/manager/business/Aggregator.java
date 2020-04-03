@@ -23,7 +23,7 @@ public class Aggregator {
         LOG.debug("Sending request to keycloak...");
         //      1 Send get_token
         //      2 Extract token
-        token = TokenService.getAdminToken();
+        //token = TokenService.getAdminToken();
         LOG.info("My token is: "+ token);
         //      3 Send check_existence 
         //      4 Extract timestamp

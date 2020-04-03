@@ -2,14 +2,12 @@ package org.acme.iam.manager.events;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.acme.iam.manager.business.Aggregator;
@@ -22,8 +20,6 @@ import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
-
-import io.quarkus.security.ForbiddenException;
 
 @Path("/token")
 public class LoginResource {
