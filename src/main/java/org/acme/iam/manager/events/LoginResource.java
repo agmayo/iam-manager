@@ -6,8 +6,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.acme.iam.manager.business.Aggregator;
@@ -20,6 +22,8 @@ import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+
+import io.quarkus.security.ForbiddenException;
 
 @Path("/token")
 public class LoginResource {
@@ -42,12 +46,11 @@ public class LoginResource {
         //Valid user: admin
         // Valid password: Pa55w0rd
         Aggregator aggregator = new Aggregator();
-        UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+        try{
 
-        if(userToken.getAccessToken() != null){
-           return buildOkTokenResponse(userToken, userData, "raw");
-        }
-        else{
+            UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+            return buildOkTokenResponse(userToken, userData, "raw");
+        }catch(WebApplicationException wae){
             return buildKoTokenResponse(userData);
         }
     }
@@ -63,19 +66,20 @@ public class LoginResource {
         //Valid user: admin
         // Valid password: Pa55w0rd
         Aggregator aggregator = new Aggregator();
-        UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+        try{
 
-        if(userToken.getAccessToken() != null){
-           return buildOkTokenResponse(userToken, userData, "cookie");
-        }
-        else{
+            UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+            return buildOkTokenResponse(userToken, userData, "cookie");
+        }catch(WebApplicationException wae){
             return buildKoTokenResponse(userData);
         }
     }
 
 
     //TODO: This method should be in aggregator but we have injection problems plz help
-    private UserToken buildUserToken(String user, String password) {
+    private UserToken buildUserToken(String user, String password)  throws WebApplicationException{
+        UserToken tokenData = new UserToken();
+
         TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
         "openid-connect",
         "password",
@@ -84,14 +88,15 @@ public class LoginResource {
         "admin-cli",
         MediaType.APPLICATION_JSON,
         MediaType.APPLICATION_FORM_URLENCODED);
-        // TODO: We will need some exception management here.
-        UserToken tokenData = new UserToken();
+        
         tokenData.setAccessToken(iamTokenInfo.getAccessToken());
         tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());
         tokenData.setAccessTokenExpiration(iamTokenInfo.getExpiresIn());
+        
         tokenData.setRefreshTokenExpiration(iamTokenInfo.getRefreshExpiration());
         return tokenData;
     }
+    
     private Response buildOkTokenResponse(UserToken userToken, UserTokenRequest userData, String mode){
         LOG.info("Returning token " +  
                  "User: " + userData.getUsername() + 
@@ -107,26 +112,26 @@ public class LoginResource {
             String tokenSignature = tokenParts[2];
             NewCookie payloadCookie = new NewCookie("payload", 
                                                     tokenHeader + "." + tokenBody,
-                                                    null,
-                                                    null,
+                                                    "/",
+                                                    "localhost",
                                                     NewCookie.DEFAULT_VERSION,
                                                     null,
                                                     //set expiration for the cookie as token -1 to avoid complicated situations.
                                                     userToken.getAccessTokenExpiration()-1,
                                                     null,
-                                                    true,
+                                                    false,
                                                     false);
             LOG.debug("Token payload cookie created: " + payloadCookie.toString());
             NewCookie signatureCookie = new NewCookie("signature",
                                                        tokenSignature,
-                                                       null,
-                                                       null,
+                                                       "/",
+                                                       "localhost",
                                                        NewCookie.DEFAULT_VERSION,
                                                        null,
                                                        //set expiration for the cookie as token -1 to avoid complicated situations.
                                                        userToken.getAccessTokenExpiration()-1,
                                                        null,
-                                                       true,
+                                                       false,
                                                        true);
             LOG.debug("Token signature cookie created: " + signatureCookie.toString());
             return Response.noContent().cookie(payloadCookie, signatureCookie).build();
@@ -137,9 +142,9 @@ public class LoginResource {
         }
     }
     private Response buildKoTokenResponse(UserTokenRequest userData){
+        //TODO: should not always be a 500: maybe forward the code from iam?
         LOG.info("No token could be obtained"+  "User:" + userData.getUsername());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
-    // TODO: What if someone not in the IAM tries to get a token????
 
 }
