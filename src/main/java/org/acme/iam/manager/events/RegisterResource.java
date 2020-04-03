@@ -31,13 +31,13 @@ public class RegisterResource {
         Boolean userExists = aggregator.checkUserExistence();
         // TODO: We will need some exception management here.
         if(userExists){
-            LOG.info("User exists, returning 204");
+            //LOG.info("User exists, returning 204");
             return Response.noContent().build();
         }
         else{
             // TODO: Improve with some extra info in the body. 
             // More info: https://stackoverflow.com/questions/26845631/is-it-correct-to-return-404-when-a-rest-resource-is-not-found
-            LOG.info("User could not be found, returning 404");
+            //LOG.info("User could not be found, returning 404");
             return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
