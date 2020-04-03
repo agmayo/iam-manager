@@ -73,7 +73,7 @@ public class LoginResource {
         }
     }
 
-
+   
     //TODO: This method should be in aggregator but we have injection problems plz help
     private UserToken buildUserToken(String user, String password) {
         TokenData iamTokenInfo = tokenServiceInterface.getToken("master",

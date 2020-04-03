@@ -8,7 +8,7 @@ import java.util.List;
 public class IamUser {
 
     private String id;
-    private String createdTimestamp;
+    private long createdTimestamp;
     private String username;
     private boolean enabled;
     private boolean totp;
@@ -25,7 +25,7 @@ public class IamUser {
         super();
     }
 
-	public IamUser(String id, String createdTimestamp, String username, boolean enabled, boolean totp,
+	public IamUser(String id, long createdTimestamp, String username, boolean enabled, boolean totp,
 			boolean emailVerified, String firstName, String lastName, String email, List<?> disableableCredentialTypes,
 			List<?> requiredActions, int notBefore, IamAccess access) {
 		this.id = id;
@@ -51,11 +51,11 @@ public class IamUser {
 		this.id = id;
 	}
 
-	public String getCreatedTimestamp() {
+	public long getCreatedTimestamp() {
 		return createdTimestamp;
 	}
 
-	public void setCreatedTimestamp(String createdTimestamp) {
+	public void setCreatedTimestamp(long createdTimestamp) {
 		this.createdTimestamp = createdTimestamp;
 	}
 
