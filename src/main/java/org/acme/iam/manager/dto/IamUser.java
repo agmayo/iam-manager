@@ -20,7 +20,7 @@ public class IamUser {
     private List<?> requiredActions;
     private int notBefore;
 	private IamAccess access;
-	private Credential credentials;
+	private List<Credential> credentials;
 
     public IamUser() {
         super();
@@ -28,7 +28,7 @@ public class IamUser {
 
 	public IamUser(String id, long createdTimestamp, String username, boolean enabled, boolean totp,
 			boolean emailVerified, String firstName, String lastName, String email, List<?> disableableCredentialTypes,
-			List<?> requiredActions, int notBefore, IamAccess access, Credential credentials) {
+			List<?> requiredActions, int notBefore, IamAccess access, List<Credential> credentials) {
 		this.id = id;
 		this.createdTimestamp = createdTimestamp;
 		this.username = username;
@@ -149,11 +149,11 @@ public class IamUser {
 		this.access = access;
 	}
 
-	public Credential getCredentials() {
+	public List<Credential> getCredentials() {
 		return credentials;
 	}
 
-	public void setCredentials(Credential credentials) {
+	public void setCredentials(List<Credential> credentials) {
 		this.credentials = credentials;
 	}
 

@@ -3,8 +3,6 @@ package org.acme.iam.manager.business;
 import java.io.ByteArrayInputStream;
 
 import javax.annotation.Priority;
-import javax.validation.ValidationException;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 

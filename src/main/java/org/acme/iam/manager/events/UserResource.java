@@ -1,29 +1,32 @@
 package org.acme.iam.manager.events;
 
-import org.acme.iam.manager.business.Aggregator;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.acme.iam.manager.business.TokenServiceInterface;
+import org.acme.iam.manager.business.UserService;
 import org.acme.iam.manager.dto.Credential;
 import org.acme.iam.manager.dto.IamUser;
 import org.acme.iam.manager.dto.TokenData;
+import org.acme.iam.manager.dto.UserRegisterRequest;
 import org.acme.iam.manager.dto.UserToken;
 import org.acme.iam.manager.dto.UserTokenRequest;
-import org.acme.iam.manager.business.TokenServiceInterface;
-import org.acme.iam.manager.business.UserService;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 @Path("/user")
 public class UserResource {
@@ -85,24 +88,29 @@ public class UserResource {
     @Counted(name = "registerCalls", description = "How many times the /register resource has been called")
     @Timed(name = "registerTime", description = "A measure of how long it takes to retrieve a person.", unit = MetricUnits.MILLISECONDS)
     @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/register")
-    public Response createUserR() {
-        String username= "jack";
-        String email= "jack@jack.es";
-        String type= "password";
-        String value= "jack";
-        boolean temporary= false;
+    public Response createUserR(UserRegisterRequest userData) {
+        String username= userData.getUsername();
+        String email= userData.getEmail();
+        List<Credential> credentials=userData.getCredentials();
+        Credential credential= credentials.get(0);
+        String type= credential.getType();
+        String value= credential.getValue();
+        boolean temporary= credential.isTemporary();
 
         UserTokenRequest adminUser= new UserTokenRequest();
         adminUser.setPassword("Pa55w0rd");
         adminUser.setUsername("admin");
         UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword());
 
-        Credential creds = new Credential();
+        Credential cred = new Credential();
         IamUser user = new IamUser();
-        creds.setTemporary(temporary);
-        creds.setType(type);
-        creds.setValue(value);
+        cred.setTemporary(temporary);
+        cred.setType(type);
+        cred.setValue(value);
+        ArrayList<Credential> creds= new ArrayList<Credential>();
+        creds.add(cred);
         user.setUsername(username);
         user.setEmail(email);
         user.setCredentials(creds);
@@ -112,8 +120,8 @@ public class UserResource {
         MediaType.APPLICATION_FORM_URLENCODED,
         user);
         
-        LOG.info("User exists, returning 204");
-        return Response.noContent().build();
+        LOG.debug("Response from IAM: "+response.toString());
+        return response;
 
     }    
      
