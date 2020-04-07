@@ -1,7 +1,10 @@
 package org.acme.iam.manager.events;
 
+import java.util.Base64;
+
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -15,6 +18,7 @@ import org.acme.iam.manager.business.TokenServiceInterface;
 import org.acme.iam.manager.dto.TokenData;
 import org.acme.iam.manager.dto.UserToken;
 import org.acme.iam.manager.dto.UserTokenRequest;
+import org.acme.iam.manager.exceptions.BasicAuthHeaderParsingException;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -26,7 +30,8 @@ public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
-    
+    //@Inject
+    Aggregator aggregator;
     @Inject
     @RestClient
     TokenServiceInterface tokenServiceInterface;
@@ -41,7 +46,7 @@ public class LoginResource {
     public Response loginRaw(UserTokenRequest userData) {
         //Valid user: admin
         // Valid password: Pa55w0rd
-        Aggregator aggregator = new Aggregator();
+        //aggregator.getAccessToken(userData.getUsername(), userData.getPassword());
         try{
 
             UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
@@ -58,20 +63,48 @@ public class LoginResource {
     @Timed(name = "cookieLoginTime", description = "A measure of how long it takes to retrieve a token in cookie format.", unit = MetricUnits.MILLISECONDS)
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response loginCookie(UserTokenRequest userData) {
-        //Valid user: admin
-        // Valid password: Pa55w0rd
+    public Response loginCookie(@HeaderParam("authorization") String basicAuthHeader) {
+        UserTokenRequest userData = new UserTokenRequest();
         Aggregator aggregator = new Aggregator();
         try{
-
+            
+            userData = parseBasicAuth(basicAuthHeader);
             UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
             return buildOkTokenResponse(userToken, userData, "cookie");
         }catch(WebApplicationException wae){
             return buildKoTokenResponse(userData);
+        }catch(BasicAuthHeaderParsingException bape){
+            LOG.warn(bape.getLocalizedMessage());
+            LOG.info("Returning: "+ Response.Status.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
 
-   
+    private UserTokenRequest parseBasicAuth(String rawHeader) throws BasicAuthHeaderParsingException{
+
+        try{
+            String decodedCreds = "";
+            // Header is in the format "Basic 5tyc0uiDat4"
+            String[] rawHeaderParts = rawHeader.split("\\s+");
+            // We save "5tyc0uiDat4" and ommit "Basic"
+            String encodedCreds = rawHeaderParts[1];
+            // Decode the data back to original string
+            byte[] bytes = null;
+            try {
+                bytes = Base64.getDecoder().decode(encodedCreds);
+            } catch (IllegalArgumentException iae) {
+                LOG.error("Authorization Header does not contain a valid Base64: " + encodedCreds);
+            }
+            // We get the string "user:password"
+            decodedCreds = new String(bytes);
+            String[] creds = decodedCreds.split(":");
+            return new UserTokenRequest(creds[0],creds[1]);
+
+        } catch(Exception ex){
+            LOG.warn(ex.getLocalizedMessage());
+            throw new BasicAuthHeaderParsingException();
+        }
+    }
     //TODO: This method should be in aggregator but we have injection problems plz help
     private UserToken buildUserToken(String user, String password)  throws WebApplicationException{
         UserToken tokenData = new UserToken();
@@ -138,7 +171,6 @@ public class LoginResource {
         }
     }
     private Response buildKoTokenResponse(UserTokenRequest userData){
-        //TODO: should not always be a 500: maybe forward the code from iam?
         LOG.info("No token could be obtained"+  "User:" + userData.getUsername());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }

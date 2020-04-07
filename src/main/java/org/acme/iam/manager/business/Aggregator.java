@@ -1,6 +1,8 @@
 package org.acme.iam.manager.business;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.acme.iam.manager.dto.TokenData;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -9,6 +11,8 @@ import org.jboss.logging.Logger;
 /**
  * Aggregator
  */
+//@Named("aggregator")
+//@Singleton
 public class Aggregator {
 
     @Inject
