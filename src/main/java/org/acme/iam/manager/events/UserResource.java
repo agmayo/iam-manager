@@ -1,6 +1,7 @@
 package org.acme.iam.manager.events;
 
 import org.acme.iam.manager.business.Aggregator;
+import org.acme.iam.manager.dto.Credential;
 import org.acme.iam.manager.dto.IamUser;
 import org.acme.iam.manager.dto.TokenData;
 import org.acme.iam.manager.dto.UserToken;
@@ -15,12 +16,12 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -45,39 +46,80 @@ public class UserResource {
     @Produces(MediaType.TEXT_PLAIN)
     @Path("/exists/{username}")
     public Response checkUserExistence(@PathParam String username) {
-      
+        try{
+            UserTokenRequest adminUser= new UserTokenRequest();
+            adminUser.setPassword("Pa55w0rd");
+            adminUser.setUsername("admin");
+            UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword());
+            
+            List<IamUser> userList = userService.getUser("master",
+            username,
+            "Bearer " + mytoken.getAccessToken(),
+            MediaType.APPLICATION_FORM_URLENCODED);
+
+            IamUser user= userList.get(0);
+            String usernameIam = user.getUsername();
+
+            if(userList.size()==0){
+                LOG.info("User could not be found, returning 404");
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+            else if(usernameIam.compareTo(username)==0){
+                LOG.info("User exists, returning 204");
+                return Response.noContent().build();
+            }
+            //amparo
+            else{
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+
+            }
+                      
+        }catch(WebApplicationException wae){
+            LOG.info("User exists, but is not equal to: "+username);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }  
+        
+    }
+
+    @POST
+    @Counted(name = "registerCalls", description = "How many times the /register resource has been called")
+    @Timed(name = "registerTime", description = "A measure of how long it takes to retrieve a person.", unit = MetricUnits.MILLISECONDS)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/register")
+    public Response createUserR() {
+        String username= "jack";
+        String email= "jack@jack.es";
+        String type= "password";
+        String value= "jack";
+        boolean temporary= false;
+
         UserTokenRequest adminUser= new UserTokenRequest();
         adminUser.setPassword("Pa55w0rd");
         adminUser.setUsername("admin");
         UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword());
-        
-        List<IamUser> userList = userService.getUser("master",
-        username,
+
+        Credential creds = new Credential();
+        IamUser user = new IamUser();
+        creds.setTemporary(temporary);
+        creds.setType(type);
+        creds.setValue(value);
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setCredentials(creds);
+
+        Response response = userService.createUser("master",
         "Bearer " + mytoken.getAccessToken(),
-        MediaType.APPLICATION_FORM_URLENCODED);
-        if(userList.size()==0){
-            LOG.info("User could not be found, returning 404");
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        else{
-            IamUser user= userList.get(0);
-            String usernameIam = user.getUsername();
-    
-            if(usernameIam.compareTo(username)==0){
-                LOG.info("User exists, returning 204");
-                return Response.noContent().build();
-            }
-            else{
-                LOG.info("User exists, but "+usernameIam+ " is not equal to: "+username);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        MediaType.APPLICATION_FORM_URLENCODED,
+        user);
+        
+        LOG.info("User exists, returning 204");
+        return Response.noContent().build();
 
-            }
-        }
-
-    }
+    }    
      
     //TODO: This method should be in aggregator but we have injection problems plz help
-    private UserToken buildAdminToken(String user, String password) {
+    private UserToken buildAdminToken(String user, String password) throws WebApplicationException{
+       
         TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
         "openid-connect",
         "password",
@@ -86,12 +128,16 @@ public class UserResource {
         "admin-cli",
         MediaType.APPLICATION_JSON,
         MediaType.APPLICATION_FORM_URLENCODED);
+
         UserToken tokenData = new UserToken();
         tokenData.setAccessToken(iamTokenInfo.getAccessToken());
         tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());
         tokenData.setAccessTokenExpiration(iamTokenInfo.getExpiresIn());
+        
         tokenData.setRefreshTokenExpiration(iamTokenInfo.getRefreshExpiration());
         return tokenData;
     }
+
+    
 
 }
