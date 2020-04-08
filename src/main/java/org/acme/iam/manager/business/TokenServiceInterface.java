@@ -8,7 +8,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.acme.iam.manager.dto.TokenData;
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.FormParam;
@@ -16,7 +15,6 @@ import org.jboss.resteasy.annotations.jaxrs.HeaderParam;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 @Path("/auth")
-@ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
 @RegisterRestClient(configKey="token-api")
 @RegisterProvider(value = RestClientExceptionMapper.class, priority = 50)
 public interface TokenServiceInterface {
@@ -31,11 +29,6 @@ public interface TokenServiceInterface {
                        @FormParam("password") String password,
                        @FormParam("client_id") String clientID,
                        @HeaderParam("Accept") String acceptHeader,
-                       @HeaderParam("Content-Type") String contentType);
-
-    // TODO: está feo que esté a fuego. 
-    default String lookupAuth() {
-        return "Basic " + 
-             Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
-      }
+                       @HeaderParam("Content-Type") String contentType,
+                       @HeaderParam("Authorization")String authorizationHeader);
 }

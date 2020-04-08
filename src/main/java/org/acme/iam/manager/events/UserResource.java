@@ -14,6 +14,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
@@ -77,6 +78,7 @@ public class UserResource {
     }
     //TODO: This method should be in aggregator but we have injection problems plz help
     private UserToken buildAdminToken(String user, String password) {
+        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
         TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
         "openid-connect",
         "password",
@@ -84,7 +86,8 @@ public class UserResource {
         password,
         "admin-cli",
         MediaType.APPLICATION_JSON,
-        MediaType.APPLICATION_FORM_URLENCODED);
+        MediaType.APPLICATION_FORM_URLENCODED,
+        authorizationHeader);
         UserToken tokenData = new UserToken();
         tokenData.setAccessToken(iamTokenInfo.getAccessToken());
         tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());
