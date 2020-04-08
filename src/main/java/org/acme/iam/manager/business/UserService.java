@@ -1,6 +1,7 @@
 package org.acme.iam.manager.business;
 
 import org.acme.iam.manager.dto.IamUser;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import org.jboss.resteasy.annotations.jaxrs.QueryParam;
@@ -17,6 +18,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/auth")
 @RegisterRestClient(configKey="token-api")
+@RegisterProvider(value = RestClientExceptionMapper.class, priority = 50)
 public interface UserService {
     
     @GET

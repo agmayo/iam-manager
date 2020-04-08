@@ -32,7 +32,7 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 public class UserResource {
 
     // Logs to be sent to Logstash
-    private static final Logger LOG = Logger.getLogger(LoginResource.class);
+    private static final Logger LOG = Logger.getLogger(UserResource.class);
 
     @Inject
     @RestClient
@@ -53,9 +53,10 @@ public class UserResource {
             UserTokenRequest adminUser= new UserTokenRequest();
             adminUser.setPassword("Pa55w0rd");
             adminUser.setUsername("admin");
-            UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword());
+            String realm= "master";
+            UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword(),realm);
             
-            List<IamUser> userList = userService.getUser("master",
+            List<IamUser> userList = userService.getUser(realm,
             username,
             "Bearer " + mytoken.getAccessToken(),
             MediaType.APPLICATION_FORM_URLENCODED);
@@ -71,7 +72,7 @@ public class UserResource {
                 LOG.info("User exists, returning 204");
                 return Response.noContent().build();
             }
-            //amparo
+            //
             else{
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 
@@ -90,45 +91,56 @@ public class UserResource {
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/register")
-    public Response createUserR(UserRegisterRequest userData) {
-        String username= userData.getUsername();
-        String email= userData.getEmail();
-        List<Credential> credentials=userData.getCredentials();
-        Credential credential= credentials.get(0);
-        String type= credential.getType();
-        String value= credential.getValue();
-        boolean temporary= credential.isTemporary();
+    public Response createUser(UserRegisterRequest userData) {
 
-        UserTokenRequest adminUser= new UserTokenRequest();
-        adminUser.setPassword("Pa55w0rd");
-        adminUser.setUsername("admin");
-        UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword());
+        try{
+            String username= userData.getUsername();
+            String email= userData.getEmail();
+            List<Credential> credentials=userData.getCredentials();
+            Credential credential= credentials.get(0);
+            String type= credential.getType();
+            String value= credential.getValue();
+            boolean temporary= credential.isTemporary();
+            boolean enabled =userData.isEnabled();
+    
+            UserTokenRequest adminUser= new UserTokenRequest();
+            adminUser.setPassword("Pa55w0rd");
+            adminUser.setUsername("admin");
+            String realm ="master";
+            UserToken mytoken = buildAdminToken(adminUser.getUsername(),adminUser.getPassword(),realm);
+    
+            Credential cred = new Credential();
+            IamUser user = new IamUser();
 
-        Credential cred = new Credential();
-        IamUser user = new IamUser();
-        cred.setTemporary(temporary);
-        cred.setType(type);
-        cred.setValue(value);
-        ArrayList<Credential> creds= new ArrayList<Credential>();
-        creds.add(cred);
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setCredentials(creds);
+            cred.setTemporary(temporary);
+            cred.setType(type);
+            cred.setValue(value);
+            ArrayList<Credential> creds= new ArrayList<Credential>();
+            creds.add(cred);
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setCredentials(creds);
+            user.setEnabled(enabled);
 
-        Response response = userService.createUser("master",
-        "Bearer " + mytoken.getAccessToken(),
-        MediaType.APPLICATION_FORM_URLENCODED,
-        user);
+            Response response = userService.createUser(realm,
+            "Bearer " + mytoken.getAccessToken(),
+            MediaType.APPLICATION_FORM_URLENCODED,
+            user);
+
+            LOG.info("User:" + userData.getUsername()+ " was correctly created");
+            return Response.noContent().build();
+
+        }catch(WebApplicationException wae){
+            LOG.info( "User:" + userData.getUsername()+ " was not correctly created" );
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
         
-        LOG.debug("Response from IAM: "+response.toString());
-        return response;
-
     }    
      
     //TODO: This method should be in aggregator but we have injection problems plz help
-    private UserToken buildAdminToken(String user, String password) throws WebApplicationException{
+    private UserToken buildAdminToken(String user, String password, String realm) throws WebApplicationException{
        
-        TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
+        TokenData iamTokenInfo = tokenServiceInterface.getToken(realm,
         "openid-connect",
         "password",
         user,
