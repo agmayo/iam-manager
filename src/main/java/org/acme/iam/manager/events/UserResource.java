@@ -1,6 +1,7 @@
 package org.acme.iam.manager.events;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -138,17 +139,23 @@ public class UserResource {
     }    
      
     //TODO: This method should be in aggregator but we have injection problems plz help
+<<<<<<< HEAD
     private UserToken buildAdminToken(String user, String password, String realm) throws WebApplicationException{
-       
+        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
         TokenData iamTokenInfo = tokenServiceInterface.getToken(realm,
+=======
+    private UserToken buildAdminToken(String user, String password) {
+        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
+        TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
+>>>>>>> 603261bb0308068c286c3a4e77ffd4f4876d0f2b
         "openid-connect",
         "password",
         user,
         password,
         "admin-cli",
         MediaType.APPLICATION_JSON,
-        MediaType.APPLICATION_FORM_URLENCODED);
-
+        MediaType.APPLICATION_FORM_URLENCODED,
+        authorizationHeader);
         UserToken tokenData = new UserToken();
         tokenData.setAccessToken(iamTokenInfo.getAccessToken());
         tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());

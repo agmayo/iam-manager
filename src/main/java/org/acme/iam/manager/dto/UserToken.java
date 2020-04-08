@@ -1,8 +1,11 @@
 package org.acme.iam.manager.dto;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * UserToken
  */
+@RegisterForReflection
 public class UserToken {
 
     private String accessToken;

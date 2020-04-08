@@ -10,14 +10,14 @@ networks:
 
 services:
   iam-manager:
+    container_name: iam_manager
     image: iam-manager
     build:
       context: ../../../.
-      dockerfile: src/main/docker/Dockerfile.jvm # Native not working
-    container_name: iam_manager
+      dockerfile: src/main/docker/Dockerfile.native # Native not working
     ports:
       # To receive the curls
-      - 8080:8080
+      - 8081:8080
     volumes:
       #- ../resources/application.properties:/work/config/application.properties:z #Share the directory from the host to the container with RW won't work in WINDOWS.
       - ../resources/application.properties:/work/config/application.properties
