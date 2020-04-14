@@ -3,8 +3,13 @@ package org.acme.iam.manager.events;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.Email;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -42,6 +47,9 @@ public class UserResource {
     @Inject
     @RestClient
     TokenServiceInterface tokenServiceInterface;
+
+    @Inject
+    Validator validator;
 
 
     @GET
@@ -89,10 +97,10 @@ public class UserResource {
     @POST
     @Counted(name = "registerCalls", description = "How many times the /register resource has been called")
     @Timed(name = "registerTime", description = "A measure of how long it takes to retrieve a person.", unit = MetricUnits.MILLISECONDS)
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/register")
-    public Response createUser(UserRegisterRequest userData) {
+    public Response createUser(@Valid UserRegisterRequest userData) {
 
         try{
             String username= userData.getUsername();
@@ -103,7 +111,9 @@ public class UserResource {
             String value= credential.getValue();
             boolean temporary= credential.isTemporary();
             boolean enabled =userData.isEnabled();
-    
+
+            Set<ConstraintViolation<UserRegisterRequest>> violations = validator.validate(userData);
+
             UserTokenRequest adminUser= new UserTokenRequest();
             adminUser.setPassword("Pa55w0rd");
             adminUser.setUsername("admin");
@@ -139,15 +149,9 @@ public class UserResource {
     }    
      
     //TODO: This method should be in aggregator but we have injection problems plz help
-<<<<<<< HEAD
     private UserToken buildAdminToken(String user, String password, String realm) throws WebApplicationException{
         String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
         TokenData iamTokenInfo = tokenServiceInterface.getToken(realm,
-=======
-    private UserToken buildAdminToken(String user, String password) {
-        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
-        TokenData iamTokenInfo = tokenServiceInterface.getToken("master",
->>>>>>> 603261bb0308068c286c3a4e77ffd4f4876d0f2b
         "openid-connect",
         "password",
         user,

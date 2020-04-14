@@ -2,10 +2,19 @@ package org.acme.iam.manager.dto;
 
 import java.util.List;
 
+import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 public class UserRegisterRequest {
+    @NotNull(message="Username must not be null")
     private String username;
+    @NotNull(message="Email must not be null")
     private String email;
+    @NotNull(message="Credentials must not be null")
     private List<Credential> credentials;
+    @AssertTrue(message="Enabled may be true")
     private boolean enabled;
 
     public UserRegisterRequest(String username, String email, List<Credential> credentials, boolean enabled) {
