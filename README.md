@@ -15,9 +15,8 @@ This section explains who is going to access the endpoints.
 * `/login` &rarr; This endpoint will receive all the requests that don't include a `JWT Token` and are trying to get one for future secure communications. Requests should include:
   * `email`
   * `username`
-* `/user/exists/{username}` &rarr; This endpoint will receive all the request that want to check that verify the existence of a user. Request should include:
+* `/user/exists/{username}` &rarr; This endpoint will receive all the request that want to verify the existence of a user. Request should include:
   * `username`
-  * `token`
 * `/user/register` &rarr; This endpoint will receive all the request that want to register a new user in the IAM. Requests should include: 
   * `email`
   * `username`
@@ -50,7 +49,7 @@ This section depends strictly on the [current IAM provider](https://access.redha
 To execute this operation we need the following REST request to be sent:
 
 ```
-GET /auth/admin/realms/{realms}/users/{id}
+GET /auth/admin/realms/{realms}/users
 ```
 
 Then we need to evaluate the response, it might contain the user data in the `json` body.
