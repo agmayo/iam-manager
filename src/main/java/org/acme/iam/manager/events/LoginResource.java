@@ -4,7 +4,6 @@ import java.util.Base64;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,12 +13,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
-import org.acme.iam.manager.business.Aggregator;
-import org.acme.iam.manager.business.TokenServiceInterface;
-import org.acme.iam.manager.dto.TokenData;
 import org.acme.iam.manager.dto.UserToken;
 import org.acme.iam.manager.dto.UserTokenRequest;
 import org.acme.iam.manager.exceptions.BasicAuthHeaderParsingException;
+import org.acme.iam.manager.restclient.TokenRestClientInterface;
+import org.acme.iam.manager.service.TokenService;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -31,11 +29,12 @@ public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
-    //@Inject
-    Aggregator aggregator;
     @Inject
     @RestClient
-    TokenServiceInterface tokenServiceInterface;
+    TokenRestClientInterface tokenServiceInterface;
+
+    @Inject
+    TokenService tokenService;
 
     // Metrics to be sent to Prometheus
     @Path("/raw")
@@ -45,12 +44,10 @@ public class LoginResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response loginRaw(UserTokenRequest userData) {
-        //Valid user: admin
-        // Valid password: Pa55w0rd
-        //aggregator.getAccessToken(userData.getUsername(), userData.getPassword());
+        // TODO: should not be hardcoded.
+        String realm = "spring-boot-quickstart";
         try{
-
-            UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+            UserToken userToken = tokenService.buildUserToken(userData.getUsername(), userData.getPassword(), realm);
             return buildOkTokenResponse(userToken, userData, "raw");
         }catch(WebApplicationException wae){
             return buildKoTokenResponse(userData);
@@ -58,7 +55,7 @@ public class LoginResource {
     }
 
     // Metrics to be sent to Prometheus
-    @GET
+    @POST
     @Path("/cookie")
     @Counted(name = "cookieLoginCalls", description = "How many times the /login/cookie resource has been called")
     @Timed(name = "cookieLoginTime", description = "A measure of how long it takes to retrieve a token in cookie format.", unit = MetricUnits.MILLISECONDS)
@@ -66,11 +63,12 @@ public class LoginResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response loginCookie(@HeaderParam("authorization") String basicAuthHeader) {
         UserTokenRequest userData = new UserTokenRequest();
-        Aggregator aggregator = new Aggregator();
+        // TODO: should not be hardcoded.
+        String realm = "spring-boot-quickstart";
         try{
             
             userData = parseBasicAuth(basicAuthHeader);
-            UserToken userToken = buildUserToken(userData.getUsername(), userData.getPassword());
+            UserToken userToken = tokenService.buildUserToken(userData.getUsername(), userData.getPassword(), realm);
             return buildOkTokenResponse(userToken, userData, "cookie");
         }catch(WebApplicationException wae){
             return buildKoTokenResponse(userData);
@@ -106,28 +104,6 @@ public class LoginResource {
             throw new BasicAuthHeaderParsingException();
         }
     }
-    //TODO: This method should be in aggregator but we have injection problems plz help
-    private UserToken buildUserToken(String user, String password)  throws WebApplicationException{
-        UserToken tokenData = new UserToken();
-        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
-        TokenData iamTokenInfo = tokenServiceInterface.getToken("spring-boot-quickstart",
-        "openid-connect",
-        "password",
-        user,
-        password,
-        "admin-cli",
-        MediaType.APPLICATION_JSON,
-        MediaType.APPLICATION_FORM_URLENCODED,
-        authorizationHeader);
-        
-        tokenData.setAccessToken(iamTokenInfo.getAccessToken());
-        tokenData.setRefreshToken(iamTokenInfo.getRefreshToken());
-        tokenData.setAccessTokenExpiration(iamTokenInfo.getExpiresIn());
-        
-        tokenData.setRefreshTokenExpiration(iamTokenInfo.getRefreshExpiration());
-        return tokenData;
-    }
-    
     private Response buildOkTokenResponse(UserToken userToken, UserTokenRequest userData, String mode){
         LOG.info("Returning token " +  
                  "User: " + userData.getUsername() + 

@@ -5,7 +5,7 @@ import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import org.jboss.resteasy.annotations.jaxrs.QueryParam;
-
+import org.acme.iam.manager.restclient.RestClientExceptionMapper;
 import java.util.List;
 
 import javax.ws.rs.GET;

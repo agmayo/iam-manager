@@ -19,7 +19,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.acme.iam.manager.business.TokenServiceInterface;
+import org.acme.iam.manager.restclient.TokenRestClientInterface;
 import org.acme.iam.manager.business.UserService;
 import org.acme.iam.manager.dto.Credential;
 import org.acme.iam.manager.dto.IamUser;
@@ -46,7 +46,7 @@ public class UserResource {
     
     @Inject
     @RestClient
-    TokenServiceInterface tokenServiceInterface;
+    TokenRestClientInterface tokenServiceInterface;
 
     @Inject
     Validator validator;

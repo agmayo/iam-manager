@@ -1,6 +1,4 @@
-package org.acme.iam.manager.business;
-
-import java.util.Base64;
+package org.acme.iam.manager.restclient;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -17,7 +15,7 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 @Path("/auth")
 @RegisterRestClient(configKey="token-api")
 @RegisterProvider(value = RestClientExceptionMapper.class, priority = 50)
-public interface TokenServiceInterface {
+public interface TokenRestClientInterface {
 
     @POST
     @Path("/realms/{realm}/protocol/{protocol}/token")

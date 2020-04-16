@@ -1,4 +1,4 @@
-package org.acme.iam.manager.business;
+package org.acme.iam.manager.restclient;
 
 import java.io.ByteArrayInputStream;
 
