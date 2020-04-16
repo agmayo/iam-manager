@@ -9,6 +9,23 @@ networks:
     driver: bridge
 
 services:
+  iam-manager:
+    container_name: iam_manager
+    image: iam-manager
+    build:
+      context: ../../../.
+      dockerfile: src/main/docker/Dockerfile.native
+    ports:
+      # To receive the curls
+      - 8081:8080
+    volumes:
+      #- ../resources/application.properties:/work/config/application.properties:z #Share the directory from the host to the container with RW won't work in WINDOWS.
+      - ../resources/application.properties:/work/config/application.properties
+    depends_on:
+      - keycloak
+    networks:
+      - iam_manager
+
   postgres:
     image: postgres
     #restart: unless-stopped #Container will automatically restart on stop when it crashes but not if stopped
