@@ -193,7 +193,17 @@ Curl's valid response:
 
 
 
+## Health check
 
+We created a simple liveness health check procedure which states whether our application is running or not and a readiness health check which will be able to state whether our application is able to process requests.
+
+Health check procedures are defined as implementations of the `HealthCheck` interface which are defined as CDI beans with the CDI qualifier `@Liveness`. If you run the health check at http://localhost:8080/health/live the checks array will contain only the  check defined with the `@Liveness` qualifier.
+
+We will create another health check procedure that accesses our IAM. If the IAM can be accessed, then we will always return the response indicating it is ready. 
+
+If you access http://localhost:8080/health/ready you will see only the IAM connection health check as it is the only health check defined with the `@Readiness` qualifier. 
+
+If you access http://localhost:8080/health you will get back both checks.
 
 ## More info
 
