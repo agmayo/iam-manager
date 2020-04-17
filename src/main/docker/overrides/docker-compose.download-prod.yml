@@ -1,0 +1,82 @@
+# This docker-compose is supposed to start a container
+# with this microservice and a keycloak iam for testing purposes.
+
+version: "3.7"
+# https://github.com/keycloak/keycloak-containers/tree/master/docker-compose-examples
+
+networks:
+  iam_manager:
+    driver: bridge
+
+services:
+  iam-manager:
+    container_name: iam_manager
+    image: rpardom/iam_manager:native
+    ports:
+      # To receive the curls
+      - 8081:8080
+    volumes:
+      - ../resources/application.properties:/work/config/application.properties:z #Share the directory from the host to the container with RW won't work in WINDOWS.
+      #- ../resources/application.properties:/work/config/application.properties
+    depends_on:
+      - keycloak
+    networks:
+      - iam_manager
+
+  postgres:
+    image: postgres
+    #restart: unless-stopped #Container will automatically restart on stop when it crashes but not if stopped
+    container_name: iam_postgres
+    #volumes:
+    #- ./data/postgres:/var/lib/postgresql/data:z #Share the directory from the host to the container with RW mode to store database's data
+    #- postgres_data:/var/lib/postgresql/data # windows
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    #ports: ['5432:5432'] # the HTTP endpoint
+    healthcheck: #Healthchecks section let us specify a command supposed to verify if the container is alive
+      #test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: 'PGPASSWORD="PgKcPasswd" psql --host 127.0.0.1 --username keycloak --dbname keycloak -c "select 1" ; [ "0" -eq "$$?" ]; echo $$?' #Command that checks if the postresql server is started and respond
+      interval: 30s #Interval between 2 checks
+      timeout: 10s #If the command executes in more than 10 sec the test is supposed to have failed
+      retries: 5 #If the check fails 3times in a row, the container state is not healthy anymore
+    networks:
+      - iam_manager
+
+  #######################################
+  # Keycloak: The IAM
+  #######################################
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: iam_keycloak
+    #restart: unless-stopped
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_LOGLEVEL: DEBUG
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+      KEYCLOAK_IMPORT: /tmp/quickstart-realm.json
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    command:
+      ["-b", "0.0.0.0", "-Dkeycloak.profile.feature.upload_scripts=enabled"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/"]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    ports:
+      - 9090:8080
+    depends_on:
+      - postgres
+    networks:
+      - iam_manager
+    volumes:
+      #- ./quickstart-realm.json:/tmp/quickstart-realm.json:z #Share the directory from the host to the container with RW won't work in WINDOWS.
+      - ../resources/quickstart-realm.json:/tmp/quickstart-realm.json

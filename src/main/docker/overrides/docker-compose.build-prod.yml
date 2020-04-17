@@ -19,8 +19,8 @@ services:
       # To receive the curls
       - 8081:8080
     volumes:
-      #- ../resources/application.properties:/work/config/application.properties:z #Share the directory from the host to the container with RW won't work in WINDOWS.
-      - ../resources/application.properties:/work/config/application.properties
+      - ../resources/application.properties:/work/config/application.properties:z #Share the directory from the host to the container with RW won't work in WINDOWS.
+      #- ../resources/application.properties:/work/config/application.properties
     depends_on:
       - keycloak
     networks:

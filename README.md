@@ -191,8 +191,6 @@ Curl's valid response:
 {"classViolations":[],"parameterViolations":[{"constraintType":"PARAMETER","message":"Username must not be null","path":"createUser.userData.username","value":""}],"propertyViolations":[],"returnValueViolations":[]}%  
 ```
 
-
-
 ## Health check
 
 We created a simple liveness health check procedure which states whether our application is running or not and a readiness health check which will be able to state whether our application is able to process requests.
@@ -204,6 +202,107 @@ We will create another health check procedure that accesses our IAM. If the IAM 
 If you access http://localhost:8080/health/ready you will see only the IAM connection health check as it is the only health check defined with the `@Readiness` qualifier. 
 
 If you access http://localhost:8080/health you will get back both checks.
+
+## Docker
+
+This application is fully ready to be used with docker. You can find all the files in `src/main/docker`
+
+### Deploy
+
+#### Dev environment
+
+If you want to create code in your local machine you can execute: 
+
+```bash
+# In the /src/main/docker dir:
+docker-compose -f docker-compose.yml -f overrides/docker-compose.local-dev.yml up -d
+```
+
+#### Prod environment from code
+
+If you want to containerize your application and test it in a docker network you can execute:
+
+```bash
+# In the /src/main/docker dir:
+docker-compose -f docker-compose.yml -f overrides/docker-compose.build-prod.yml up -d
+```
+
+#### Prod environment from images
+
+If you want to generate all the containers from the images in the docker registry:
+
+``` bash
+# In the /src/main/docker dir:
+docker-compose -f docker-compose.yml -f overrides/docker-compose.download-prod.yml up -d
+```
+
+### Upload
+
+1. Generate the artifact:
+
+   * For the native image:
+
+     ```bash
+     # In the base of the project
+     mvn package -Pnative
+     ```
+
+   * For the JVM image:
+
+     ```bash
+     # In the base of the project
+     mvn package
+     ```
+
+2. Generate the docker images:
+
+   * For the native image:
+
+     ```bash
+     # In the base of the project
+     docker build -f src/main/docker/Dockerfile.native -t iam_manager:native . 
+     ```
+
+   * For the JVM image:
+
+     ```bash
+     # In the base of the project
+     docker build -f src/main/docker/Dockerfile.jvm -t iam_manager:jvm . 
+     ```
+
+3. Retag the docker images for the repository:
+
+   * For the native image:
+
+     ```bash
+     # For a private docker registry:
+     # docker tag iam_manager:jvm <registry_url>/<your_organization>/iam_manager:native
+     
+     # For the docker hub:
+     docker tag iam_manager:native rpardom/iam_manager:native
+     ```
+
+   * For the JVM machine:
+
+     ```bash
+     # For a private docker registry:
+     # docker tag iam_manager:jvm <registry_url>/<your_organization>/iam_manager:jvm
+     
+     # For the docker hub:
+     docker tag iam_manager:jvm rpardom/iam_manager:jvm
+     ```
+
+4. Push the tagged images:
+
+   ```bash
+   # For a private docker registry:
+   # docker login <registry_url>
+   # docker push <registry_url>/<your_organization>/iam_manager
+   
+   # For the docker hub:
+   docker login
+   docker push rpardom/iam_manager
+   ```
 
 ## More info
 
