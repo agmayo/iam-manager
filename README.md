@@ -12,9 +12,26 @@ It is necessary because our [IAM provider](https://access.redhat.com/products/id
 
 This section explains who is going to access the endpoints.
 
-* `/login` &rarr; This endpoint will receive all the requests that don't include a `JWT Token` and are trying to get one for future secure communications. Requests should include:
-  * `email`
-  * `username`
+* `/token` &rarr; This endpoint will receive all the requests that don't include a `JWT Token` and are trying to get one for future secure communications. There can be multiple ways of asking for a token:
+
+  * `/token/raw` &rarr; Simplest way to ask for a token, posting a json: 
+
+    ```bash
+    curl --header "Content-Type: application/json" \
+      --request POST \
+      --data '{"username":"alice","password":"alice"}' \
+      http://localhost:8080/token/raw -v
+    ```
+
+  * `/token/cookie` &rarr; Ask for the token as a cookie, with a [Basic Auth](https://en.wikipedia.org/wiki/Basic_access_authentication) header.
+
+    ```bash
+    curl --user alice:alice \
+      --header "Content-Type: application/json" \
+      --request POST \
+      http://localhost:8080/token/cookie -v
+    ```
+
 * `/user/exists/{username}` &rarr; This endpoint will receive all the request that want to verify the existence of a user. Request should include:
   * `username`
 * `/user/register` &rarr; This endpoint will receive all the request that want to register a new user in the IAM. Requests should include: 
@@ -30,12 +47,50 @@ This section explains who is going to access the endpoints.
 
 The requests received will be transformed so they can be understood by our [current IAM provider](https://access.redhat.com/products/identity-management).
 
+* Both `/token` requests get transformed into the following:
+
+  ```bash
+  # currently a lot of the parameters are hardcoded.
+  # Authorization header: app-authz-rest-springboot:secret
+  curl --request POST "http://localhost:9090/auth/realms/master/protocol/openid-connect/token" \
+  --header "Content-Type: application/x-www-form-urlencoded" \
+  --header 'Authorization: Basic YXBwLWF1dGh6LXJlc3Qtc3ByaW5nYm9vdDpzZWNyZXQ=' \
+  -d "client_id=admin-cli" \
+  -d "grant_type=password" \
+  -d "username=alice" \
+  -d "password=alice" -v
+  ```
+
 * `/user/exists/{username}` &rarr; This request will result in a user existance check.
 * `/user/register` &rarr; This request will result in a user add operation.
 
 ### Output
 
 All callers should expect a `500 SERVER ERROR` response for internal errors and a `400 BAD REQUEST` for incomplete requests. If there are no errors, the following responses are expected:
+
+* Both `/token` requests return a valid token with slight variations:
+
+  * `/token/raw` &rarr; Returns an *access token* and a *refresh token*, each one with it's expiration time.
+
+    ```json
+    {
+        "accessToken": "eyJh...xXqxmXnI8fzWusM",
+        "accessTokenExpiration": 300,
+        "refreshToken": "eyJhbGciOi..._MzB2COBdb0U",
+        "refreshTokenExpiration": 1800
+    }
+    ```
+
+  * `/token/cookie` &rarr; Returns two cookies, One contains the token's payload and header and the other one the signature. This endpoint is for authentication from a browser. Get more info [here](https://medium.com/lightrail/getting-token-authentication-right-in-a-stateless-single-page-application-57d0c6474e3).
+
+    ```
+    < HTTP/1.1 204 No Content
+    * Added cookie payload="eyJhbGciOiJSUzI1...Y2UifQ" for domain localhost, path /, expire 1587394916
+    < Set-Cookie: payload=eyJhbGciOiJSUzI1Ni...XJuYW1lIjoiYWxpY2UifQ;Version=1;Domain=localhost;Path=/;Max-Age=299
+    * Added cookie signature="RpcMXsZM...Y3Qddg4qQ" for domain localhost, path /, expire 1587394916
+    < Set-Cookie: signature=RpcMXsZMqyuhy...QxQxXY3Qddg4qQ;Version=1;Domain=localhost;Path=/;Max-Age=299;HttpOnly
+    < 
+    ```
 
 * `/user/exists/{username}` &rarr; If the user exists, a `204 NO CONTENT` response will be returned. If the user does not exist, it will return a `404 NOT FOUND` response.
 * `/user/register` &rarr; If the user was correctly created a `200 OK` response, if it already exists a `409 CONFLICT` response will be returned.
