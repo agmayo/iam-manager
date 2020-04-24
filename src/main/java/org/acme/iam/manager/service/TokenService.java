@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import org.acme.iam.manager.restclient.TokenRestClientInterface;
 import org.acme.iam.manager.dto.TokenData;
 import org.acme.iam.manager.dto.UserToken;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,6 +21,15 @@ import org.jboss.logging.Logger;
 public class TokenService {
     private static final Logger LOG = Logger.getLogger(TokenService.class);
     
+    @ConfigProperty(name = "protocol")
+    String protocol;
+    @ConfigProperty(name = "granttype")
+    String grantType;
+    @ConfigProperty(name = "client.id")
+    String clientId;
+    @ConfigProperty(name = "basic.authorization")
+    String basicAuthorization;
+    
     @Inject
     @RestClient
     TokenRestClientInterface tokenServiceInterface;
@@ -27,13 +37,13 @@ public class TokenService {
     @Transactional
     public UserToken buildUserToken(String user, String password, String realm)  throws WebApplicationException{
         UserToken tokenData = new UserToken();
-        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString("app-authz-rest-springboot:secret".getBytes());
+        String authorizationHeader = "Basic " + Base64.getEncoder().encodeToString(basicAuthorization.getBytes());
         TokenData iamTokenInfo = tokenServiceInterface.getToken(realm,
-        "openid-connect",
-        "password",
+        protocol,
+        grantType,
         user,
         password,
-        "admin-cli",
+        clientId,
         MediaType.APPLICATION_JSON,
         MediaType.APPLICATION_FORM_URLENCODED,
         authorizationHeader);

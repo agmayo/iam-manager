@@ -19,6 +19,8 @@ import org.acme.iam.manager.dto.IamUser;
 import org.acme.iam.manager.dto.UserRegisterRequest;
 import org.acme.iam.manager.dto.UserToken;
 import org.acme.iam.manager.dto.UserTokenRequest;
+import org.acme.iam.manager.exceptions.UserException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -26,6 +28,15 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class UserService {
     private static final Logger LOG = Logger.getLogger(UserService.class);
+
+    @ConfigProperty(name = "master.realm")
+    String realm;
+    @ConfigProperty(name = "admin.password")
+    String adminPassword;
+    @ConfigProperty(name = "admin.username")
+    String adminUsername;
+    @ConfigProperty(name = "token.authentication")
+    String tokenAuthentication;
     
     @Inject
     @RestClient
@@ -37,17 +48,16 @@ public class UserService {
     Validator validator;
 
     @Transactional
-    public List<IamUser> checkUserExistence(String username) {
-        UserTokenRequest adminUser= new UserTokenRequest();
-        adminUser.setPassword("Pa55w0rd");
-        adminUser.setUsername("admin");
-        String realm= "master";
-        UserToken mytoken = tokenService.buildUserToken(adminUser.getUsername(), adminUser.getPassword(), realm);
-        
+    public List<IamUser> checkUserExistence(String username) throws UserException {
+
+        UserToken mytoken= buildAdminToken(adminPassword, adminUsername, realm);
         List<IamUser> userList = UserRestClientInterface.getUser(realm,
         username,
-        "Bearer " + mytoken.getAccessToken(),
+        tokenAuthentication+ " " + mytoken.getAccessToken(),
         MediaType.APPLICATION_FORM_URLENCODED);
+        if(userList.size()==0){
+            throw new UserException("User not found");
+        }
         return userList;
 
     }
@@ -65,12 +75,8 @@ public class UserService {
 
         Set<ConstraintViolation<UserRegisterRequest>> violations = validator.validate(userData);
 
-        UserTokenRequest adminUser= new UserTokenRequest();
-        adminUser.setPassword("Pa55w0rd");
-        adminUser.setUsername("admin");
-        String realm ="master";
-        UserToken mytoken = tokenService.buildUserToken(adminUser.getUsername(), adminUser.getPassword(), realm);
-    
+        UserToken mytoken= buildAdminToken(adminPassword, adminUsername, realm);
+
         Credential cred = new Credential();
         IamUser user = new IamUser();
 
@@ -85,9 +91,17 @@ public class UserService {
         user.setEnabled(enabled);
 
         Response iamUser = UserRestClientInterface.createUser(realm,
-        "Bearer " + mytoken.getAccessToken(),
+        tokenAuthentication+ " " + mytoken.getAccessToken(),
         MediaType.APPLICATION_FORM_URLENCODED,
         user);
         return iamUser;
+    }
+
+    private UserToken buildAdminToken(String adminPassword, String adminUsername,String realm){
+        UserTokenRequest adminUser= new UserTokenRequest();
+        adminUser.setPassword(adminPassword);
+        adminUser.setUsername(adminUsername);
+        UserToken mytoken = tokenService.buildUserToken(adminUser.getUsername(), adminUser.getPassword(), realm);
+        return mytoken;
     }
 }

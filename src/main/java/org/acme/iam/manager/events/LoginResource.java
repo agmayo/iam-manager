@@ -18,6 +18,7 @@ import org.acme.iam.manager.dto.UserTokenRequest;
 import org.acme.iam.manager.exceptions.BasicAuthHeaderParsingException;
 import org.acme.iam.manager.restclient.TokenRestClientInterface;
 import org.acme.iam.manager.service.TokenService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -29,6 +30,9 @@ public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
+    @ConfigProperty(name = "spring.realm")
+    String realm;
+
     @Inject
     @RestClient
     TokenRestClientInterface tokenServiceInterface;
@@ -44,8 +48,7 @@ public class LoginResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response loginRaw(UserTokenRequest userData) {
-        // TODO: should not be hardcoded.
-        String realm = "spring-boot-quickstart";
+     
         try{
             UserToken userToken = tokenService.buildUserToken(userData.getUsername(), userData.getPassword(), realm);
             return buildOkTokenResponse(userToken, userData, "raw");
@@ -63,8 +66,7 @@ public class LoginResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response loginCookie(@HeaderParam("authorization") String basicAuthHeader) {
         UserTokenRequest userData = new UserTokenRequest();
-        // TODO: should not be hardcoded.
-        String realm = "spring-boot-quickstart";
+ 
         try{
             
             userData = parseBasicAuth(basicAuthHeader);

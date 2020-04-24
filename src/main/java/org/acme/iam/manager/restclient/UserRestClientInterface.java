@@ -6,7 +6,6 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import org.jboss.resteasy.annotations.jaxrs.QueryParam;
 
-import org.acme.iam.manager.restclient.RestClientExceptionMapper;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -15,7 +14,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-
 
 
 @Path("/auth")
