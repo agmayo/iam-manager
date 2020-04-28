@@ -1,0 +1,25 @@
+version: '3.7'
+services: 
+  iam-manager:
+      container_name: iam-manager
+      image: iam_manager:native
+      build:
+        context: ./
+        dockerfile: ./src/main/docker/Dockerfile.native
+      ports:
+        # To receive the curls
+        - 8081:8080
+      volumes:
+      # won't work in WINDOWS!!
+      # Only works with NATIVE image !!
+      - type: bind
+        source: ./docker-conf/iam-manager/application.properties
+        target: /work/config/application.properties
+      depends_on:
+        - keycloak
+      networks:
+        - gateway_rechable
+networks:
+  # Containers that should be recheable by the gateway
+  gateway_rechable:
+    driver: bridge
