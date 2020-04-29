@@ -2,24 +2,21 @@ package org.acme.iam.manager.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.acme.iam.manager.restclient.UserRestClientInterface;
 import org.acme.iam.manager.dto.Credential;
 import org.acme.iam.manager.dto.IamUser;
 import org.acme.iam.manager.dto.UserRegisterRequest;
 import org.acme.iam.manager.dto.UserToken;
 import org.acme.iam.manager.dto.UserTokenRequest;
-import org.acme.iam.manager.exceptions.UserException;
+import org.acme.iam.manager.restclient.UserRestClientInterface;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -35,8 +32,6 @@ public class UserService {
     String adminPassword;
     @ConfigProperty(name = "admin.username")
     String adminUsername;
-    @ConfigProperty(name = "token.authentication")
-    String tokenAuthentication;
     
     @Inject
     @RestClient
@@ -48,32 +43,33 @@ public class UserService {
     Validator validator;
 
     @Transactional
-    public List<IamUser> checkUserExistence(String username) throws UserException {
-
+    public boolean checkUserExistence(String username) {
+        boolean result = false;
         UserToken mytoken= buildAdminToken(adminPassword, adminUsername, realm);
         List<IamUser> userList = UserRestClientInterface.getUser(realm,
         username,
-        tokenAuthentication+ " " + mytoken.getAccessToken(),
+        "Bearer " + mytoken.getAccessToken(),
         MediaType.APPLICATION_FORM_URLENCODED);
         if(userList.size()==0){
-            throw new UserException("User not found");
+            result = false;
+        }else{
+            result = true;
         }
-        return userList;
+        return result;
 
     }
     
     @Transactional
-    public Response createUser(UserRegisterRequest userData){
-        String username= userData.getUsername();
-        String email= userData.getEmail();
-        List<Credential> credentials=userData.getCredentials();
-        Credential credential= credentials.get(0);
-        String type= credential.getType();
-        String value= credential.getValue();
-        boolean temporary= credential.isTemporary();
-        boolean enabled =userData.isEnabled();
-
-        Set<ConstraintViolation<UserRegisterRequest>> violations = validator.validate(userData);
+    public boolean createUser(UserRegisterRequest userData){
+        boolean result = false;
+        String username = userData.getUsername();
+        String email = userData.getEmail();
+        List<Credential> credentials = userData.getCredentials();
+        Credential credential = credentials.get(0);
+        String type = credential.getType();
+        String value = credential.getValue();
+        boolean temporary = credential.isTemporary();
+        boolean enabled = userData.isEnabled();
 
         UserToken mytoken= buildAdminToken(adminPassword, adminUsername, realm);
 
@@ -90,11 +86,16 @@ public class UserService {
         user.setCredentials(creds);
         user.setEnabled(enabled);
 
-        Response iamUser = UserRestClientInterface.createUser(realm,
-        tokenAuthentication+ " " + mytoken.getAccessToken(),
+        Response iamResponse = UserRestClientInterface.createUser(realm,
+        "Bearer "+ mytoken.getAccessToken(),
         MediaType.APPLICATION_FORM_URLENCODED,
         user);
-        return iamUser;
+        if(iamResponse.getStatus() == 201){
+            result = true;
+        }{
+            result = false;
+        }
+        return result;
     }
 
     private UserToken buildAdminToken(String adminPassword, String adminUsername,String realm){

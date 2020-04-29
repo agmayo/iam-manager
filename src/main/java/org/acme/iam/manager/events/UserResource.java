@@ -1,7 +1,5 @@
 package org.acme.iam.manager.events;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -13,11 +11,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.acme.iam.manager.dto.UserRegisterRequest;
 import org.acme.iam.manager.service.TokenService;
 import org.acme.iam.manager.service.UserService;
-import org.acme.iam.manager.dto.IamUser;
-import org.acme.iam.manager.dto.UserRegisterRequest;
-import org.acme.iam.manager.exceptions.UserException;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -42,24 +38,16 @@ public class UserResource {
     @Path("/exists/{username}")
     public Response checkUserExistence(@PathParam String username) {
         try {
-            List<IamUser> userList = userService.checkUserExistence(username);
-            IamUser user = userList.get(0);
-            String usernameIam = user.getUsername();
-            
-            if(userList.size()==0){ 
-            LOG.info("User could not be found, returning 404");
-            return Response.status(Response.Status.NOT_FOUND).build(); 
-            }else if(usernameIam.compareTo(username)==0){
-            LOG.info("User exists, returning 204"); return Response.noContent().build();
-            }else{ 
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            boolean userExists = userService.checkUserExistence(username);
+            if(userExists){
+                LOG.info("User exists, returning 204"); 
+                return Response.noContent().build();
+            }else{
+                LOG.info("User could not be found");
+                return Response.status(Response.Status.NOT_FOUND).build();
             }
-            
-        }catch(UserException ue){
-            LOG.info("User not found");
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }  
-        catch(WebApplicationException wae){
+
+        }catch(WebApplicationException wae){
             LOG.info("User exists, but is not equal to: "+username);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }  
@@ -75,9 +63,13 @@ public class UserResource {
     public Response createUser(@Valid UserRegisterRequest userData) {
 
         try{
-            Response response=userService.createUser(userData);
-            LOG.info("User:" + userData.getUsername()+ " was correctly created");
-            return Response.ok().build();
+            if(userService.createUser(userData)){
+                LOG.info("User:" + userData.getUsername()+ " was correctly created");
+                return Response.ok().build();
+            }else{
+                LOG.error("User:" + userData.getUsername()+ " was NOT created due unknown error.");
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
 
         }catch(WebApplicationException wae){
             LOG.info( "User:" + userData.getUsername()+ " was not correctly created" );
