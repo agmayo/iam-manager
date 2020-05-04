@@ -92,7 +92,7 @@ public class UserService {
         user);
         if(iamResponse.getStatus() == 201){
             result = true;
-        }{
+        }else{
             result = false;
         }
         return result;
