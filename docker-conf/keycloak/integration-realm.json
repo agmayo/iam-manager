@@ -36,6 +36,79 @@
   "quickLoginCheckMilliSeconds": 1000,
   "maxDeltaTimeSeconds": 43200,
   "failureFactor": 30,
+  "users": [
+    {
+        "username": "alice",
+        "enabled": true,
+        "credentials": [
+            {
+                "type": "password",
+                "value": "alice"
+            }
+        ],
+        "realmRoles": [
+            "offline_access",
+            "uma_authorization",
+            "user"
+
+        ]
+    },
+    {
+        "username": "bob",
+        "enabled": true,
+        "credentials": [
+            {
+                "type": "password",
+                "value": "bob"
+            }
+        ],
+        "realmRoles": [
+            "offline_access",
+            "uma_authorization",
+            "user"
+
+        ]
+    },
+    {
+        "username": "charlie",
+        "enabled": true,
+        "credentials": [
+            {
+                "type": "password",
+                "value": "Pa55w0rd"
+            }
+        ],
+        "realmRoles": [
+          "offline_access",
+          "uma_authorization",
+          "user",
+          "user-premium"
+        ],
+        "clientRoles": {
+          "realm-management": [
+            "query-groups",
+            "view-clients",
+            "view-realm",
+            "query-users",
+            "manage-users",
+            "manage-authorization",
+            "query-realms",
+            "manage-events",
+            "query-clients",
+            "create-client",
+            "view-identity-providers",
+            "view-authorization",
+            "impersonation",
+            "manage-realm",
+            "view-users",
+            "manage-clients",
+            "manage-identity-providers",
+            "view-events"
+          ]
+      }
+    }
+    
+],
   "roles": {
     "realm": [
       {

@@ -14,7 +14,7 @@ services:
       KEYCLOAK_LOGLEVEL: DEBUG
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: Pa55w0rd
-      KEYCLOAK_IMPORT: /tmp/quickstart-realm.json
+      KEYCLOAK_IMPORT: /tmp/integration-realm.json
       # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
       #JDBC_PARAMS: "ssl=true"
     command:
@@ -35,8 +35,8 @@ services:
     volumes:
       # won't work in WINDOWS!!
       - type: bind
-        source: ./docker-conf/keycloak/quickstart-realm.json
-        target: /tmp/quickstart-realm.json
+        source: ./docker-conf/keycloak/integration-realm.json
+        target: /tmp/integration-realm.json
   keycloak-db:
     image: postgres
     #restart: unless-stopped #Container will automatically restart on stop when it crashes but not if stopped
