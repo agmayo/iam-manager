@@ -21,14 +21,16 @@ public class IamUser {
     private int notBefore;
 	private IamAccess access;
 	private List<Credential> credentials;
+	private List<String> clientRoles;
+	private List<String> realmRoles;
 
     public IamUser() {
         super();
     }
-
 	public IamUser(String id, long createdTimestamp, String username, boolean enabled, boolean totp,
 			boolean emailVerified, String firstName, String lastName, String email, List<?> disableableCredentialTypes,
-			List<?> requiredActions, int notBefore, IamAccess access, List<Credential> credentials) {
+			List<?> requiredActions, int notBefore, IamAccess access, List<Credential> credentials,
+			List<String> clientRoles, List<String> realmRoles) {
 		this.id = id;
 		this.createdTimestamp = createdTimestamp;
 		this.username = username;
@@ -43,7 +45,10 @@ public class IamUser {
 		this.notBefore = notBefore;
 		this.access = access;
 		this.credentials = credentials;
+		this.clientRoles = clientRoles;
+		this.realmRoles = realmRoles;
 	}
+	
 
 	public String getId() {
 		return id;
@@ -155,6 +160,22 @@ public class IamUser {
 
 	public void setCredentials(List<Credential> credentials) {
 		this.credentials = credentials;
+	}
+
+	public List<String> getClientRoles() {
+		return clientRoles;
+	}
+
+	public void setClientRoles(List<String> clientRoles) {
+		this.clientRoles = clientRoles;
+	}
+
+	public List<String> getRealmRoles() {
+		return realmRoles;
+	}
+
+	public void setRealmRoles(List<String> realmRoles) {
+		this.realmRoles = realmRoles;
 	}
 
 

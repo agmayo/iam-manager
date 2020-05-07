@@ -4,6 +4,7 @@ import java.util.Base64;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -58,7 +59,7 @@ public class LoginResource {
     }
 
     // Metrics to be sent to Prometheus
-    @POST
+    @GET
     @Path("/cookie")
     @Counted(name = "cookieLoginCalls", description = "How many times the /login/cookie resource has been called")
     @Timed(name = "cookieLoginTime", description = "A measure of how long it takes to retrieve a token in cookie format.", unit = MetricUnits.MILLISECONDS)

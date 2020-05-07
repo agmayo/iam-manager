@@ -14,12 +14,16 @@ public class UserRegisterRequest {
     private List<Credential> credentials;
     @AssertTrue(message="Enabled may be true")
     private boolean enabled;
-
-    public UserRegisterRequest(String username, String email, List<Credential> credentials, boolean enabled) {
+    private List<String> clientRoles;
+    private List<String> realmRoles;
+    
+    public UserRegisterRequest(String username, String email, List<Credential> credentials, boolean enabled, List<String> clientRoles, List<String> realmRoles) {
         this.username = username;
         this.email = email;
         this.credentials = credentials;
         this.enabled = enabled;
+        this.clientRoles = clientRoles;
+        this.realmRoles = realmRoles;
     }
 
     public UserRegisterRequest() {
@@ -56,6 +60,22 @@ public class UserRegisterRequest {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public List<String> getClientRoles() {
+        return clientRoles;
+    }
+
+    public void setClientRoles(List<String> clientRoles) {
+        this.clientRoles = clientRoles;
+    }
+
+    public List<String> getRealmRoles() {
+        return realmRoles;
+    }
+
+    public void setRealmRoles(List<String> realmRoles) {
+        this.realmRoles = realmRoles;
     }
 
     
