@@ -16,6 +16,23 @@ docker-compose up -d
 
 ### Prod environment from code
 
+Before doing any prod environment deploy you should make sure that you are using the latest code, in order to do so, generate the artifacts:
+
+* For the native image:
+
+  ```bash
+  # In the base of the project
+  mvn package -Pnative -Dquarkus.native.container-runtime=docker
+  ```
+
+* For the JVM image:
+
+  ```bash
+  # In the base of the project
+  mvn package
+  ```
+
+
 If you want to containerize your application and test it in a docker network you can execute:
 
 * For the `native` image:

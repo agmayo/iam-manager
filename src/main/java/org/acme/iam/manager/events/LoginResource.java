@@ -31,7 +31,7 @@ public class LoginResource {
 
     // Logs to be sent to Logstash
     private static final Logger LOG = Logger.getLogger(LoginResource.class);
-    @ConfigProperty(name = "spring.realm")
+    @ConfigProperty(name = "master.realm")
     String realm;
 
     @Inject
