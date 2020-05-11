@@ -43,10 +43,29 @@ This section explains who is going to access the endpoints.
   
 
 * `/user/register` &rarr; This endpoint will receive all the request that want to register a new user in the IAM. Requests should include: 
+  
   ```bash
   curl --request POST "http://localhost:8080/user/register" \
   --header "Content-Type: application/json" \
   --data '{"username":"ail","email":"ail@ail.es", "credentials":[{"type":"password","value":"ail","temporary":false}], "enabled":"true"}' -v
+```
+  
+
+- `/roles/{username} `&rarr; This endpoint will receive all the request asking for user roles. Requests should include: 
+
+  ```bash
+  curl --header "Content-Type: application/json" \
+    --request GET \
+    http://localhost:8080/roles/{username} -v
+  ```
+
+  
+
+-  `/menu`  &rarr; This endpoint will receive all the request that want to display the menu depending on the role of the user extracted from the token. Requests should include: 
+
+  ```bash
+  curl --location --request GET 'http://localhost:8080/menu' \
+    -H 'Authorization: Bearer $token'  -v
   ```
 
   
@@ -88,7 +107,15 @@ The requests received will be transformed so they can be understood by our [curr
   --data '{"username":"joe","email":"joe@joe.es", "credentials":[{"type":"password","value":"joe","temporary":false}], "enabled":"true"}' -v
   ```
 
-  
+* ` /roles/{username}` &rarr; This request get transformed into the following:
+
+  ```bash
+  curl -k -X GET \
+    http://localhost:9090/auth/admin/realms/integration/users/{userid}/role-mappings/realm\
+    -H 'Authorization: Bearer $token'  -v
+  ```
+
+
 
 ### Output
 
@@ -190,7 +217,26 @@ All callers should expect a `500 SERVER ERROR` response for internal errors and 
   {"classViolations":[],"parameterViolations":[{"constraintType":"PARAMETER","message":"Username must not be null","path":"createUser.userData.username","value":""}],"propertyViolations":[],"returnValueViolations":[]}%  
   ```
 
+- `/menu ` &rarr; Returns the json with the menu: 
 
+  ```bash
+  {"access_token":"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5NEt2dGE3U29yYzBvdTAta0MzQXpLMXptalZRckhZLWxXSU9hdjk2aUhFIn0.eyJleHAiOjE1ODkxOTY3OTEsImlhdCI6MTU4OTE5NjQ5MSwianRpIjoiNjFhZDU4ZWYtNGFlMi00Y2M4LWI3NmMtOTA2OTI4NmU5N2NmIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL2F1dGgvcmVhbG1zL2ludGVncmF0aW9uIiwic3ViIjoiNWJmZWQ1OTMtOTgxMS00ZTM4LWI0M2UtNTZlZGIzOWEwZDMxIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYWRtaW4tY2xpIiwic2Vzc2lvbl9zdGF0ZSI6IjlmODZkMGJmLWE4ZWQtNDRlNy1hMmQzLTgzN2M5MzgwZGI0ZSIsImFjciI6IjEiLCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6ImNoYXJsaWUiLCJlbWFpbCI6ImNoYXJsaWVAaW50ZWdyYXRpb24uY29tIn0.JAU-hgdFqIn1qOeKeS3Xsi87lnVGY5PZ-RxkrwpjAR2Kk53vI4EMp4T_QYv6Es8NvCGSjLmcWD52Fh-2v7D0DNfyo8pOjW6Q6LX_3L8kbS-NLQj11-9kMp_AaO_mpUxeyGpcd795NR8wxb1lgicvKsVEwUVxhRIvPMsGl4WZNeSsrQ9og-0uAdGKVXcQ3axMqwfckO2ToQUCdx0WQ4YiszxS1ACk2-1YBNEwYZSfIEEVFZRaTeOUgpVD8NLYOpevmSukCX98b5IY0xcXhc9ybuxC7JC3GLPZBDfkDpJlrQJOhVg6tCg3njduXygIYKltrwAfhIZ9SedzxQUhTVsJ5g","expires_in":300,"refresh_expires_in":1800,"refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4NjQ2OGZmOS1mZmVhLTQ0MmQtOWZkNy0zNTE5M2Y4NGEwZjcifQ.eyJleHAiOjE1ODkxOTgyOTEsImlhdCI6MTU4OTE5NjQ5MSwianRpIjoiZGM1ZWVjMTktYjlhNC00NTc4LTg5OTQtYjUxYTllNjYxOWExIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL2F1dGgvcmVhbG1zL2ludGVncmF0aW9uIiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL2F1dGgvcmVhbG1zL2ludGVncmF0aW9uIiwic3ViIjoiNWJmZWQ1OTMtOTgxMS00ZTM4LWI0M2UtNTZlZGIzOWEwZDMxIiwidHlwIjoiUmVmcmVzaCIsImF6cCI6ImFkbWluLWNsaSIsInNlc3Npb25fc3RhdGUiOiI5Zjg2ZDBiZi1hOGVkLTQ0ZTctYTJkMy04MzdjOTM4MGRiNGUiLCJzY29wZSI6InByb2ZpbGUgZW1haWwifQ.VAyJwa8BV9O6an-D87jC6Y-iNMuhEfkQ_3hyF7bdnQg","token_type":"bearer","not-before-policy":0,"session_state":"9f86d0bf-a8ed-44e7-a2d3-837c9380db4e","scope":"profile email"}
+  ```
+
+- `/roles/{username}` &rarr; It returns:
+
+  ```bash
+  > GET /roles/charlie HTTP/1.1
+  > Host: localhost:8080
+  > User-Agent: curl/7.66.0
+  > Accept: */*
+  > Content-Type: application/json
+  > 
+  * Mark bundle as not supporting multiuse
+  < HTTP/1.1 204 No Content
+  ```
+
+  
 
 
 ## Health check
