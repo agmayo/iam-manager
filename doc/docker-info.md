@@ -32,6 +32,21 @@ Before doing any prod environment deploy you should make sure that you are using
   mvn package
   ```
 
+Generate the docker images:
+
+* For the native image:
+
+  ```bash
+  # In the base of the project
+  docker build -f src/main/docker/Dockerfile.native -t iam_manager:native . 
+  ```
+
+* For the JVM image:
+
+  ```bash
+  # In the base of the project
+  docker build -f src/main/docker/Dockerfile.jvm -t iam_manager:jvm . 
+  ```
 
 If you want to containerize your application and test it in a docker network you can execute:
 

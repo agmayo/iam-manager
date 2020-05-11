@@ -1,0 +1,131 @@
+{
+	"dashboard": {
+		"langs": {
+			"es": "Dashboard",
+			"en": "Dashboard",
+			"it": "Dashboard"
+		},
+		"icon": "dashboard",
+		"to": "/dashboard"
+	},
+	"components": {
+		"langs": {
+			"es": "Componentes",
+			"en": "Components",
+			"it": "Componenti"
+		},
+		"icon": "app",
+		"to": "/components"
+	},
+	"installations": {
+		"langs": {
+			"es": "Instalaciones",
+			"en": "Installations",
+			"it": "Installazione"
+		},
+		"icon": "control",
+		"children": {
+			"installations": {
+				"langs": {
+					"es": "Instalaciones",
+					"en": "Installations",
+					"it": "installazioni"
+				},
+				"icon": "control",
+				"to": "/installations"
+			},
+			"elements": {
+				"langs": {
+					"es": "Elementos",
+					"en": "Elements",
+					"it": "Elementi"
+				},
+				"icon": "list",
+				"children": {
+					"egates": {
+						"langs": {
+							"es": "eGates",
+							"en": "eGates",
+							"it": "eGates"
+						},
+						"icon": "door",
+						"to": "/installations/elements/egates"
+					},
+					"supervisors": {
+						"langs": {
+							"es": "Supervisores",
+							"en": "Supervisors",
+							"it": "Supervisori"
+						},
+						"icon": "admin",
+						"to": "/installations/elements/supervisors"
+					}
+				}
+			},
+			"modules": {
+				"langs": {
+					"es": "Módulos",
+					"en": "Modules",
+					"it": "Moduli"
+				},
+				"icon": "dumpster",
+				"to": "/installations/modules"
+			}
+		}
+	},
+	"summary-report": {
+		"langs": {
+			"es": "Summary Report",
+			"en": "Summary Report",
+			"it": "Relazione di sintesi"
+		},
+		"icon": "audit",
+		"to": "/summary-report"
+	},
+	"new-report": {
+		"langs": {
+			"es": "New Report",
+			"en": "New Report",
+			"it": "Nuovo Rapporto"
+		},
+		"icon": "audit",
+		"to": "/new-report"
+	},
+	"setting": {
+		"langs": {
+			"es": "Configuración",
+			"en": "Setting",
+			"it": "configurazione"
+		},
+		"icon": "setting",
+		"children": {
+			"countries": {
+				"langs": {
+					"es": "Países",
+					"en": "Countries",
+					"it": "Paesi"
+				},
+				"icon": "map",
+				"to": "/setting/countries"
+			},
+			"operation-groups": {
+				"langs": {
+					"es": "Grupos de operación",
+					"en": "Operation groups",
+					"it": "Gruppi operativi"
+				},
+				"icon": "multiple",
+				"to": "/setting/operation-groups"
+			},
+			"all": {
+				"langs": {
+					"es": "Modos de operación",
+					"en": "Operation modes",
+					"it": "Modalità operative"
+				},
+				"icon": "list",
+				"to": "/setting"
+			}
+		}
+	}
+}

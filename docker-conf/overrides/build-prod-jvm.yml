@@ -19,6 +19,10 @@ services:
       - type: bind
         source: ./docker-conf/iam-manager/menu.json
         target: /resources/menu.json
+      # Saving user_menu.json for /menu endpoint
+      - type: bind
+        source: ./docker-conf/iam-manager/user_menu.json
+        target: /resources/user_menu.json 
       depends_on:
         - keycloak
       networks:
