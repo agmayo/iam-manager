@@ -48,7 +48,8 @@ This section explains who is going to access the endpoints.
   curl --request POST "http://localhost:8080/user/register" \
   --header "Content-Type: application/json" \
   --data '{"username":"ail","email":"ail@ail.es", "credentials":[{"type":"password","value":"ail","temporary":false}], "enabled":"true"}' -v
-```
+  ```
+
   
 
 - `/roles/{username} `&rarr; This endpoint will receive all the request asking for user roles. Requests should include: 

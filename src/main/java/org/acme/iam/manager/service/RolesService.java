@@ -19,8 +19,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import io.vertx.core.json.JsonObject;
-
 
 @Named("rolesService")
 @ApplicationScoped

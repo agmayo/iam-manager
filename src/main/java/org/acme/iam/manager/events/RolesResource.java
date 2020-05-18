@@ -10,7 +10,6 @@ import javax.ws.rs.core.Response;
 
 import java.util.List;
 
-import org.acme.iam.manager.dto.RealmMappings;
 import org.acme.iam.manager.service.RolesService;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
@@ -41,7 +40,7 @@ public class RolesResource {
                 LOG.info("userRoles:"+ userRoles); 
                 return Response.noContent().build();
             }else{
-                LOG.info("Roles could not be found");
+                LOG.error("Roles could not be found");
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
